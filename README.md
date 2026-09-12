@@ -31,8 +31,8 @@ reglas operativas para el asistente en [`CLAUDE.md`](CLAUDE.md).
 
 | Capa | Tecnología | Versión objetivo |
 |---|---|---|
-| Lenguaje | Java (Temurin) | 21 LTS |
-| Framework | Spring Boot | 3.x |
+| Lenguaje | Java | 21 LTS |
+| Framework | Spring Boot | 4.1.x |
 | Build | Maven | 3.9.x |
 | Base de datos | PostgreSQL | 17 |
 | Migraciones | Flyway | — |

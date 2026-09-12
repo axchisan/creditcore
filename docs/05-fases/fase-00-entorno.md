@@ -6,7 +6,7 @@
 > **Estado del entorno (verificado el 2026-09-12):**
 > ✅ JDK 17 y 25 (Temurin) · ✅ Maven 3.9.16 · ✅ PostgreSQL 17 corriendo · ✅ IntelliJ IDEA ·
 > ✅ DBeaver · ✅ Git 2.50 · ✅ gh CLI · ✅ AWS CLI · ✅ OrbStack (instalado en esta sesión)
-> ⬜ **Falta: JDK 21** (ver paso 1 — se puede descargar desde el propio asistente de IntelliJ)
+> ✅ JDK 21 (Homebrew OpenJDK) disponible
 
 ---
 
@@ -195,15 +195,16 @@ La opción correcta es **Spring Boot** en la columna izquierda (generadores).
 | Group | `com.axchisan` | `com.` para personas y empresas; `org.` es para organizaciones sin ánimo de lucro |
 | Artifact | `creditcore` | Se rellena solo desde Name |
 | Package name | `com.axchisan.creditcore` | La raíz de todos los paquetes |
-| JDK | **Temurin 21** | Si no lo tienes: desplegable → *Download JDK* → Vendor `Eclipse Temurin`, Version `21` |
+| JDK | **21** (cualquier distribución: Temurin, Homebrew OpenJDK…) | Si no lo tienes: desplegable → *Download JDK* → Version `21` |
 | Java | **21** | ADR-0002 |
 | Packaging | Jar | Contenedor, no servidor de aplicaciones |
+| Configuration | **YAML** | Toda la documentación del proyecto usa YAML: más legible y jerárquico que `.properties` |
 
 **Pantalla 2 — dependencias:**
 
 | Marcar | No marcar | Por qué |
 |---|---|---|
-| Spring Boot: la **3.5.x más alta** de la lista | 4.x | ADR-0002 |
+| Spring Boot: **4.1.1** (la estable que ofrece por defecto) | Versiones SNAPSHOT o M (milestone) | ADR-0002 |
 | **Spring Web** | Lombok | ADR-0004 |
 | | Spring Boot DevTools | Añade recarga automática y comportamiento implícito que estorba al aprender |
 | | Spring Data JPA, PostgreSQL Driver, Flyway | Se agregan **a mano en la Fase 03**, que es donde se entienden |
@@ -216,7 +217,7 @@ La opción correcta es **Spring Boot** en la columna izquierda (generadores).
 Abre el `pom.xml` y comprueba, uno por uno:
 
 ```
-[ ] <parent> apunta a spring-boot-starter-parent con la versión 3.5.x elegida
+[ ] <parent> apunta a spring-boot-starter-parent 4.1.1
 [ ] <groupId>com.axchisan</groupId>
 [ ] <artifactId>creditcore</artifactId>
 [ ] <java.version>21</java.version>
@@ -231,8 +232,9 @@ Abre el `pom.xml` y comprueba, uno por uno:
 **Ajustes a mano que el asistente no hace:**
 
 1. Cambiar la versión del proyecto a `0.1.0-SNAPSHOT` (el asistente pone `0.0.1-SNAPSHOT`).
-2. Añadir `<maven.compiler.release>21</maven.compiler.release>` en `<properties>`.
-   `release` es más estricto que `source`/`target`: garantiza que no uses APIs de un JDK posterior.
+2. Comprobar que **no** necesitas añadir `maven.compiler.release`: el parent de Spring Boot 4 ya
+   declara `<maven.compiler.release>${java.version}</maven.compiler.release>`. Verifícalo con
+   `./mvnw help:effective-pom` — es un buen primer uso de ese comando.
 3. Renombrar la clase principal a `CreditCoreApplication` si el asistente la llamó de otra forma
    (usa `⇧F6` — renombra también el archivo y todas las referencias).
 4. Añadir `<description>` y `<name>` con sentido.

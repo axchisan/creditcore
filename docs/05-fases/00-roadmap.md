@@ -21,7 +21,7 @@ BLOQUE II — ESTRUCTURA                      BLOQUE IV — INTEGRACIONES
 BLOQUE V — PRODUCCIÓN                       BLOQUE VI — CIERRE
 ├── F12  Observabilidad y rendimiento       ├── F16  AWS real con Terraform
 ├── F13  Asincronía, eventos y colas        ├── F17  Hardening y pruebas de carga
-├── F14  Documentación de API               └── F18  Migración a Spring Boot 4.x
+├── F14  Documentación de API               └── F18  Mantenimiento evolutivo
 └── F15  Contenedores y CI/CD
 ```
 
@@ -49,7 +49,7 @@ BLOQUE V — PRODUCCIÓN                       BLOQUE VI — CIERRE
 | F15 | Contenedores y CI/CD | ⬜ | `fase/15-cicd` | — |
 | F16 | AWS real con Terraform | ⬜ | `fase/16-aws` | — |
 | F17 | Hardening y pruebas de carga | ⬜ | `fase/17-hardening` | — |
-| F18 | Migración a Spring Boot 4.x | ⬜ | `fase/18-migracion` | — |
+| F18 | Mantenimiento evolutivo | ⬜ | `fase/18-mantenimiento` | — |
 
 Leyenda: ⬜ Pendiente · 🟡 En curso · ✅ Completada
 
@@ -382,12 +382,15 @@ runbook operativo, revisión de seguridad final, retrospectiva del proyecto.
 
 ---
 
-## F18 — Migración a Spring Boot 4.x
-**Sesiones estimadas:** 2 · **Documento:** `fase-18-migracion.md`
+## F18 — Mantenimiento evolutivo
+**Sesiones estimadas:** 2 · **Documento:** `fase-18-mantenimiento.md`
 
-**Contenido:** leer las notas de migración, actualizar el parent, resolver incompatibilidades
-apoyándose en la batería de pruebas, adoptar novedades relevantes. **Es el examen final real**:
-migrar un sistema completo confiando en las pruebas que tú escribiste.
+**Contenido:** actualizar el proyecto a la versión de Spring Boot vigente en ese momento y al resto
+de dependencias; leer las notas de versión; resolver incompatibilidades **apoyándose en la batería
+de pruebas**; saldar deuda técnica acumulada y revisar los ADR que hayan quedado obsoletos.
+
+**Es el examen final real**: actualizar un sistema completo confiando en las pruebas que tú
+escribiste. Es también la tarea más frecuente y menos enseñada de la vida profesional.
 
 ---
 

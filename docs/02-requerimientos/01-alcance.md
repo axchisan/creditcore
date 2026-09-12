@@ -101,7 +101,7 @@ facturación electrónica asociada.
 
 | Restricción | Origen |
 |---|---|
-| Java 21 LTS + Spring Boot 3.5.x (migración a 4.x como fase final) | Decisión pedagógica — ver ADR-0002 |
+| Java 21 LTS + Spring Boot 4.1.x | Ver ADR-0002 |
 | PostgreSQL como única base de datos | Decisión de proyecto |
 | Todo el código lo escribe el estudiante a mano | Objetivo del proyecto |
 | Sin frameworks de generación de código (Lombok en discusión — ver ADR-0004) | Objetivo del proyecto |
