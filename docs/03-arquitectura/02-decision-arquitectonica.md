@@ -4,7 +4,7 @@
 
 **Monolito modular + Arquitectura hexagonal + DDD táctico + organización por vertical slices.**
 
-Formalmente registrada en [`adr/ADR-0001-arquitectura-base.md`](adr/ADR-0001-arquitectura-base.md).
+Formalmente registrada en [`adr/0001-arquitectura-base.md`](adr/0001-arquitectura-base.md).
 
 ```
 CreditCore  =  Monolito modular        (un despliegue, módulos con fronteras)

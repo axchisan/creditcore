@@ -67,7 +67,7 @@ docs/
 1. [`00-vision/01-vision-y-objetivos.md`](docs/00-vision/01-vision-y-objetivos.md)
 2. [`00-vision/02-metodo-de-aprendizaje.md`](docs/00-vision/02-metodo-de-aprendizaje.md)
 3. [`01-negocio/01-dominio-credito.md`](docs/01-negocio/01-dominio-credito.md)
-4. [`02-requerimientos/01-requerimientos-funcionales.md`](docs/02-requerimientos/01-requerimientos-funcionales.md)
+4. [`02-requerimientos/01-requerimientos-funcionales.md`](docs/02-requerimientos/02-requerimientos-funcionales.md)
 5. [`03-arquitectura/01-panorama-arquitecturas.md`](docs/03-arquitectura/01-panorama-arquitecturas.md)
 6. [`03-arquitectura/02-decision-arquitectonica.md`](docs/03-arquitectura/02-decision-arquitectonica.md)
 7. [`05-fases/00-roadmap.md`](docs/05-fases/00-roadmap.md)
