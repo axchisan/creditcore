@@ -1,43 +1,64 @@
 # ADR-0002 — Versiones de Java y Spring Boot
 
-**Estado:** Aceptado · **Fecha:** 2026-09-12 · **Fase:** F00
+**Estado:** Aceptado (revisado el 2026-09-12) · **Fase:** F00
 
 ## Contexto
-En la máquina hay JDK 17 y JDK 25 (Temurin). En Maven Central, la última versión estable de
-`spring-boot-starter-parent` es **4.1.1** (verificado el 2026-09-12), y la línea 3.5.x sigue siendo
-la más extendida en producción corporativa. El objetivo del proyecto es doble: aprender la sintaxis
-y el ecosistema, y parecerse a lo que el estudiante encontrará en un entorno laboral.
 
-## Opciones consideradas
+En la máquina hay JDK 17, 21 y 25. Al abrir el generador de Spring Boot de IntelliJ se comprobó
+un hecho decisivo: **start.spring.io ya no ofrece ninguna versión 3.x**. Las únicas versiones
+disponibles el 2026-09-12 son:
 
-1. **Java 25 + Spring Boot 4.1.x** — lo más actual. Contra: menos material de referencia, muchos
-   ejemplos de la comunidad aún en 3.x, y cambios de API (Spring Framework 7, nullability con
-   JSpecify, cambios en el cliente HTTP) que añaden fricción a quien está recuperando sintaxis.
-2. **Java 21 + Spring Boot 3.5.x** — combinación dominante hoy en banca y fintech. Ecosistema de
-   documentación, tutoriales y respuestas enorme. Java 21 trae records, patrones, sealed y virtual
-   threads: todo lo moderno que interesa aprender.
-3. **Java 17 + Spring Boot 3.2** — demasiado conservador; se perdería parte del Java moderno.
+```
+4.2.0 (SNAPSHOT) · 4.2.0 (M1) · 4.1.2 (SNAPSHOT) · 4.1.1 (por defecto) · 4.0.9 (SNAPSHOT) · 4.0.8
+```
+
+Spring retira de Initializr las líneas que salen del soporte comunitario (OSS). Que 3.5.x haya
+desaparecido significa que esa línea ya solo recibe soporte comercial.
+
+Además se verificó que `spring-boot-starter-parent:4.1.1` declara `java.version=17` como mínimo y
+hereda `maven.compiler.release=${java.version}`, por lo que Java 21 es plenamente compatible.
+
+## Decisión anterior (descartada)
+
+La primera versión de este ADR elegía **Java 21 + Spring Boot 3.5.x**, con el argumento de que era
+la combinación dominante en producción corporativa y la que más material de consulta tiene, dejando
+la migración a 4.x como ejercicio final (Fase 18).
+
+**Por qué se descarta:** iniciar un proyecto nuevo, de varios meses de duración, sobre una línea
+fuera de soporte comunitario es un mal consejo de ingeniería. El argumento del material de consulta
+no compensa arrancar con deuda de versión el día uno.
 
 ## Decisión
-**Java 21 (Temurin) + Spring Boot 3.5.x**, y una **fase final dedicada a migrar a Spring Boot 4.x**
-(Fase 18).
 
-La migración de versión mayor no es un rodeo: es una tarea real y frecuente en el trabajo. Hacerla
-al final, con el proyecto cubierto de pruebas, es el mejor escenario posible para aprenderla — y
-deja el proyecto en la versión actual.
+**Java 21 (LTS) + Spring Boot 4.1.1.**
+
+- Java 21 y no 25: es LTS, es la versión mayoritaria en producción, y cubre todo el Java moderno
+  que interesa aprender (records, sealed, pattern matching, virtual threads).
+- Spring Boot 4.1.1: es la versión estable actual y la que el generador propone por defecto.
 
 ## Consecuencias
 
 ### Positivas
-- Máxima disponibilidad de material de consulta mientras se recupera fluidez.
-- Java 21 cubre todo el lenguaje moderno relevante.
-- La Fase 18 enseña a migrar versiones apoyándose en la batería de pruebas.
+- El proyecto nace en una versión soportada y actual.
+- `maven.compiler.release` viene heredado del parent: un ajuste manual menos.
+- Lo que se aprenda es directamente aplicable a proyectos nuevos del mercado.
 
-### Negativas
-- Requiere instalar Temurin 21 (los JDK 17 y 25 presentes no se usan para este proyecto).
-- Durante el desarrollo se trabaja una versión por detrás de la última.
+### Negativas (aceptadas)
+- **Buena parte del material de la comunidad (tutoriales, respuestas de StackOverflow, cursos)
+  sigue escrito para Spring Boot 3.x.** Habrá diferencias al copiar ejemplos de internet.
+  - *Mitigación*: la fuente primaria de este proyecto es la **documentación oficial de Spring Boot 4
+    y las notas de migración 3.x → 4.x**, no los tutoriales. Cuando aparezca una diferencia, se
+    verifica contra la documentación oficial y se anota en la bitácora de la fase.
+  - Esto es, además, una habilidad profesional en sí misma: trabajar con una versión más nueva que
+    el material disponible es la situación normal en el mercado.
 
-### Notas
-- Se fija la versión del JDK en el `pom.xml` (`maven.compiler.release`) para que el build no dependa
-  del JDK por defecto del sistema.
-- Gestión de múltiples JDK con SDKMAN! o con la configuración de JDK de IntelliJ (ver Fase 00).
+### Efecto sobre el roadmap
+La **Fase 18** dejaba de tener sentido como "migración a 4.x". Se redefine como
+**mantenimiento evolutivo**: actualizar dependencias, leer notas de versión, resolver
+incompatibilidades apoyándose en la batería de pruebas y saldar deuda técnica. Se conserva el
+objetivo pedagógico original —actualizar un sistema real confiando en sus pruebas— con un alcance
+más realista.
+
+### Cómo se revertiría
+Cambiar la versión del `<parent>` a 3.5.16 y resolver las diferencias de API. Barato al inicio del
+proyecto, caro más adelante: por eso se decide ahora.
