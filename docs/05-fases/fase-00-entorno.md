@@ -6,7 +6,7 @@
 > **Estado del entorno (verificado el 2026-09-12):**
 > ✅ JDK 17 y 25 (Temurin) · ✅ Maven 3.9.16 · ✅ PostgreSQL 17 corriendo · ✅ IntelliJ IDEA ·
 > ✅ DBeaver · ✅ Git 2.50 · ✅ gh CLI · ✅ AWS CLI · ✅ OrbStack (instalado en esta sesión)
-> ⬜ **Falta: JDK 21** (ver paso 1)
+> ⬜ **Falta: JDK 21** (ver paso 1 — se puede descargar desde el propio asistente de IntelliJ)
 
 ---
 
@@ -173,129 +173,88 @@ Aplícalos con `Tab` tras escribir la abreviatura.
 
 ---
 
-## Parte 3 — Crear el proyecto Maven **a mano**
+## Parte 3 — Crear el proyecto con el asistente de IntelliJ
 
-> ❗ **No uses Spring Initializr.** Todo el sentido de esta fase es que escribas el `pom.xml` y
-> entiendas cada línea. Un `pom.xml` que no entiendes es deuda técnica desde el día uno.
+> 📌 **Decisión revisada** — ver [ADR-0010](../03-arquitectura/adr/0010-generador-de-proyecto-intellij.md).
+> Se usa el generador de Spring Boot de IntelliJ Ultimate, porque es lo que se hace en el trabajo real.
+> Lo que **no** es negociable es la revisión posterior: debes poder explicar cada línea del POM.
 
-### Paso 3.1 — Estructura mínima
+### Paso 3.1 — `New Project → Spring Boot`
 
-```bash
-cd /Users/mac/Documents/Dev/Apps/LeaningJava
-mkdir -p creditcore/src/main/java/com/axchisan/creditcore
-mkdir -p creditcore/src/main/resources
-mkdir -p creditcore/src/test/java/com/axchisan/creditcore
-mkdir -p creditcore/src/test/resources
+⚠️ **No** elijas `New Project → Java`: eso crea un proyecto Maven plano, sin Spring Boot.
+La opción correcta es **Spring Boot** en la columna izquierda (generadores).
+
+**Pantalla 1 — metadatos:**
+
+| Campo | Valor | Por qué |
+|---|---|---|
+| Name | `creditcore` | En minúsculas: es el `artifactId` y el nombre del JAR. La convención Maven es minúsculas con guiones |
+| Location | `/Users/mac/Documents/Dev/Apps/LeaningJava` | IntelliJ crea la carpeta `creditcore` dentro |
+| Language | Java | |
+| Type | **Maven** | ADR-0003 |
+| Group | `com.axchisan` | `com.` para personas y empresas; `org.` es para organizaciones sin ánimo de lucro |
+| Artifact | `creditcore` | Se rellena solo desde Name |
+| Package name | `com.axchisan.creditcore` | La raíz de todos los paquetes |
+| JDK | **Temurin 21** | Si no lo tienes: desplegable → *Download JDK* → Vendor `Eclipse Temurin`, Version `21` |
+| Java | **21** | ADR-0002 |
+| Packaging | Jar | Contenedor, no servidor de aplicaciones |
+
+**Pantalla 2 — dependencias:**
+
+| Marcar | No marcar | Por qué |
+|---|---|---|
+| Spring Boot: la **3.5.x más alta** de la lista | 4.x | ADR-0002 |
+| **Spring Web** | Lombok | ADR-0004 |
+| | Spring Boot DevTools | Añade recarga automática y comportamiento implícito que estorba al aprender |
+| | Spring Data JPA, PostgreSQL Driver, Flyway | Se agregan **a mano en la Fase 03**, que es donde se entienden |
+
+> 💡 Solo **una** dependencia marcada. Cada una de las demás entra en su fase, escrita por ti,
+> entendiendo qué trae y por qué.
+
+### Paso 3.2 — Revisar lo que generó (obligatorio)
+
+Abre el `pom.xml` y comprueba, uno por uno:
+
+```
+[ ] <parent> apunta a spring-boot-starter-parent con la versión 3.5.x elegida
+[ ] <groupId>com.axchisan</groupId>
+[ ] <artifactId>creditcore</artifactId>
+[ ] <java.version>21</java.version>
+[ ] Está spring-boot-starter-web
+[ ] Está spring-boot-starter-test con <scope>test</scope>
+[ ] Está spring-boot-maven-plugin en <build>
+[ ] Existen mvnw, mvnw.cmd y .mvn/  (Maven Wrapper)
+[ ] Existen src/main/resources, src/test/java y src/test/resources
+[ ] Existe la clase CreditcoreApplication (o similar) con @SpringBootApplication
 ```
 
-### Paso 3.2 — El `pom.xml` (lo escribes tú)
+**Ajustes a mano que el asistente no hace:**
 
-Este es el contenido de referencia. **Escríbelo, no lo copies**, y pregunta por cualquier línea que
-no entiendas del todo:
+1. Cambiar la versión del proyecto a `0.1.0-SNAPSHOT` (el asistente pone `0.0.1-SNAPSHOT`).
+2. Añadir `<maven.compiler.release>21</maven.compiler.release>` en `<properties>`.
+   `release` es más estricto que `source`/`target`: garantiza que no uses APIs de un JDK posterior.
+3. Renombrar la clase principal a `CreditCoreApplication` si el asistente la llamó de otra forma
+   (usa `⇧F6` — renombra también el archivo y todas las referencias).
+4. Añadir `<description>` y `<name>` con sentido.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+### Paso 3.3 — Preguntas que debes poder responder antes de seguir
 
-    <modelVersion>4.0.0</modelVersion>
-
-    <!-- Hereda gestión de dependencias, plugins y propiedades de Spring Boot.
-         Es lo que permite declarar dependencias SIN versión más abajo. -->
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>com.axchisan</groupId>
-    <artifactId>creditcore</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
-    <name>CreditCore</name>
-    <description>Plataforma de originación y gestión de crédito</description>
-
-    <properties>
-        <java.version>21</java.version>
-        <maven.compiler.release>21</maven.compiler.release>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <dependencies>
-        <!-- Web: Spring MVC + Tomcat embebido + Jackson -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- Pruebas: JUnit 5, AssertJ, Mockito, MockMvc, JsonPath -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Empaqueta un JAR ejecutable y permite mvn spring-boot:run -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-</project>
-```
-
-**Preguntas que debes poder responder antes de seguir:**
 1. ¿Qué hace exactamente `<parent>` y por qué las dependencias no llevan `<version>`?
 2. ¿Qué diferencia hay entre `spring-boot-starter-web` y `spring-web`?
-3. ¿Qué significa el `<scope>test</scope>`?
-4. ¿Qué es un `SNAPSHOT`?
+3. ¿Qué significa `<scope>test</scope>`?
+4. ¿Qué es un `SNAPSHOT` y en qué se diferencia de una versión normal?
+5. ¿Qué diferencia hay entre `maven.compiler.source/target` y `maven.compiler.release`?
+6. ¿Para qué sirven `mvnw` y la carpeta `.mvn/` si ya tienes Maven instalado?
 
-### Paso 3.3 — El Maven Wrapper
+### Paso 3.4 — Arrancar
 
 ```bash
 cd creditcore
-mvn wrapper:wrapper
-./mvnw -v
-```
-
-Esto fija la versión de Maven para cualquiera que clone el repositorio. `mvnw` **sí** se versiona.
-
-### Paso 3.4 — La clase principal (la escribes tú)
-
-`src/main/java/com/axchisan/creditcore/CreditCoreApplication.java`
-
-```java
-package com.axchisan.creditcore;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class CreditCoreApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(CreditCoreApplication.class, args);
-    }
-}
-```
-
-### Paso 3.5 — Arrancar
-
-```bash
 ./mvnw spring-boot:run
 ```
 
 Debe aparecer el banner de Spring y `Tomcat started on port 8080`.
-`http://localhost:8080` devolverá un error 404 en formato JSON: **eso está bien**, significa que la
-aplicación responde.
-
----
+`http://localhost:8080` devolverá un 404 en JSON: **eso está bien**, significa que responde.
 
 ## Parte 4 — Maven: entender el ciclo de vida
 
