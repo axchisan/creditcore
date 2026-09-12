@@ -219,34 +219,103 @@ Abre el `pom.xml` y comprueba, uno por uno:
 ```
 [ ] <parent> apunta a spring-boot-starter-parent 4.1.1
 [ ] <groupId>com.axchisan</groupId>
-[ ] <artifactId>creditcore</artifactId>
+[ ] <artifactId>creditcore</artifactId>            ← en MINÚSCULAS
 [ ] <java.version>21</java.version>
-[ ] Está spring-boot-starter-web
-[ ] Está spring-boot-starter-test con <scope>test</scope>
+[ ] Está el starter web y el de test con <scope>test</scope>
 [ ] Está spring-boot-maven-plugin en <build>
 [ ] Existen mvnw, mvnw.cmd y .mvn/  (Maven Wrapper)
-[ ] Existen src/main/resources, src/test/java y src/test/resources
-[ ] Existe la clase CreditcoreApplication (o similar) con @SpringBootApplication
+[ ] Existen src/main/resources y src/test/java
+[ ] Existe CreditCoreApplication con @SpringBootApplication
 ```
 
-**Ajustes a mano que el asistente no hace:**
+#### ⚠️ Hallazgo: Spring Boot 4 renombró los starters
 
-1. Cambiar la versión del proyecto a `0.1.0-SNAPSHOT` (el asistente pone `0.0.1-SNAPSHOT`).
-2. Comprobar que **no** necesitas añadir `maven.compiler.release`: el parent de Spring Boot 4 ya
-   declara `<maven.compiler.release>${java.version}</maven.compiler.release>`. Verifícalo con
-   `./mvnw help:effective-pom` — es un buen primer uso de ese comando.
-3. Renombrar la clase principal a `CreditCoreApplication` si el asistente la llamó de otra forma
-   (usa `⇧F6` — renombra también el archivo y todas las referencias).
-4. Añadir `<description>` y `<name>` con sentido.
+El generador produce esto, que **no** es lo que enseña la mayoría del material de internet:
 
-### Paso 3.3 — Preguntas que debes poder responder antes de seguir
+| Spring Boot 3.x (lo que verás en tutoriales) | Spring Boot 4.x (lo que genera el asistente) |
+|---|---|
+| `spring-boot-starter-web` | `spring-boot-starter-webmvc` |
+| `spring-boot-starter-test` | `spring-boot-starter-webmvc-test` |
 
-1. ¿Qué hace exactamente `<parent>` y por qué las dependencias no llevan `<version>`?
-2. ¿Qué diferencia hay entre `spring-boot-starter-web` y `spring-web`?
-3. ¿Qué significa `<scope>test</scope>`?
-4. ¿Qué es un `SNAPSHOT` y en qué se diferencia de una versión normal?
-5. ¿Qué diferencia hay entre `maven.compiler.source/target` y `maven.compiler.release`?
-6. ¿Para qué sirven `mvnw` y la carpeta `.mvn/` si ya tienes Maven instalado?
+Ambos nombres antiguos **siguen publicados** en Maven Central para 4.1.1, así que un ejemplo de 3.x
+compila. Pero los nuevos son los correctos y traen más cosas. Comprobado con `dependency:tree`:
+
+```
+spring-boot-starter-webmvc       → starter, jackson, tomcat, http-converter, webmvc
+spring-boot-starter-webmvc-test  → starter-test, jackson-test, webmvc-test, resttestclient
+```
+
+`spring-boot-starter-webmvc-test` **contiene** a `spring-boot-starter-test` y le añade utilidades
+específicas de web (`MockMvc` moderno y `RestTestClient`). No lo cambies por el nombre antiguo.
+
+> 📌 Este es el primer ejemplo concreto de lo que advierte el ADR-0002: el material de 3.x no siempre
+> calza. La fuente de verdad es la documentación oficial de Spring Boot 4, no los tutoriales.
+> Cada diferencia que encuentres, anótala en la bitácora.
+
+#### Limpieza del POM (lo haces tú)
+
+El generador deja estos bloques **vacíos**, que son ruido y deben borrarse:
+
+```xml
+<url/>
+<licenses><license/></licenses>
+<developers><developer/></developers>
+<scm><connection/><developerConnection/><tag/><url/></scm>
+```
+
+Y estos valores hay que ajustarlos:
+
+| Elemento | Genera | Debe ser |
+|---|---|---|
+| `<artifactId>` | `CreditCore` | `creditcore` |
+| `<name>` | `CreditCore` | `creditcore` |
+| `<version>` | `0.0.1-SNAPSHOT` | `0.1.0-SNAPSHOT` |
+| `<description>` | `CreditCore` | `Plataforma de originación y gestión de crédito` |
+
+> 💡 **Lo que NO hay que añadir**: `maven.compiler.release`. El parent de Spring Boot 4 ya declara
+> `<maven.compiler.release>${java.version}</maven.compiler.release>`. Compruébalo tú mismo con
+> `./mvnw help:effective-pom | grep -A2 compiler` — es el primer uso útil de ese comando.
+
+### Paso 3.3 — Dos trampas del entorno macOS
+
+#### Trampa 1 — El sistema de archivos no distingue mayúsculas
+
+macOS es **case-insensitive** por defecto; Git y Linux **no**. Si ya existía una carpeta `CreditCore`
+y creas un proyecto llamado `creditcore` en la misma ruta, macOS **reutiliza la carpeta existente
+conservando su nombre original**. El resultado: en disco la carpeta se llama `CreditCore`, aunque el
+asistente creyó crear `creditcore`.
+
+Esto rompe el build en CI (Linux sí distingue) y ensucia el repositorio. Comprobación y arreglo:
+
+```bash
+ls -d */                       # muestra el nombre REAL en disco
+
+# Renombrar en un sistema case-insensitive requiere DOS pasos:
+mv CreditCore _tmp && mv _tmp creditcore
+```
+
+Un solo `mv CreditCore creditcore` **no hace nada**: para macOS son el mismo nombre.
+
+#### Trampa 2 — El JDK del IDE y el de la terminal no son el mismo
+
+IntelliJ usa el JDK configurado en el proyecto (21). La terminal usa el que apunte `JAVA_HOME`, que
+aquí está vacío y cae en el JDK por defecto del sistema (25). Lo ves en el log de arranque:
+
+```
+Starting CreditCoreApplicationTests using Java 25.0.4.1
+```
+
+El **bytecode** sí sale correcto —`maven.compiler.release=21` lo garantiza, y se verifica con
+`javap -v target/classes/.../CreditCoreApplication.class | grep major` → debe decir **65** (Java 21)—
+pero la JVM que ejecuta es otra. Conviene alinearlo:
+
+```bash
+# en ~/.zshrc
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export PATH="$JAVA_HOME/bin:$PATH"
+```
+
+> Tabla útil: `major version` del bytecode → 61 = Java 17, 65 = Java 21, 69 = Java 25.
 
 ### Paso 3.4 — Arrancar
 
@@ -310,6 +379,10 @@ Refs: F00"
 [ ] DBeaver conecta a la base creditcore
 [ ] ./mvnw clean verify pasa sin errores
 [ ] ./mvnw spring-boot:run arranca y Tomcat escucha en 8080
+[ ] La carpeta en disco se llama creditcore (minúsculas) — verificado con ls -d */
+[ ] El POM está limpio: sin bloques vacíos, artifactId y versión corregidos
+[ ] java -version en la terminal reporta 21 (JAVA_HOME alineado)
+[ ] javap del .class compilado reporta major version 65
 [ ] IntelliJ tiene formato al guardar y sin imports con comodín
 [ ] Los 3 live templates están creados y probados
 [ ] Puedo navegar entre 5 archivos sin tocar el ratón
@@ -325,6 +398,8 @@ Refs: F00"
 3. Declaraste 2 dependencias pero `dependency:tree` muestra decenas. ¿Por qué?
 4. ¿Qué es `~/.m2/repository` y cuándo lo borrarías?
 5. ¿Para qué sirve el Maven Wrapper si ya tienes Maven instalado?
+5b. ¿Qué diferencia hay entre `spring-boot-starter-webmvc` y `spring-boot-starter-web`?
+5c. Tu bytecode es Java 21 pero la JVM que lo ejecuta es la 25. ¿Por qué funciona? ¿Qué riesgo tiene?
 6. ¿Qué hace `⌥⌘B` y por qué será tan importante en este proyecto?
 7. ¿Por qué la contraseña de la base de datos no puede ir en el `application.yml` del repositorio?
 
